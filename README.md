@@ -9,7 +9,7 @@ headers = {'user-agent': ''}
 ```
 ## 三、执行命令
 ```
-python3 gen_ts_list_for_xunlei_download.py -project_path='save_path' -save_name='video_name' -url='m3u8_url'
+python3 main_download.py -project_path='save_path' -save_name='video_name' -url='m3u8_url'
 ```
 
 ## 注意事项
