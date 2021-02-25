@@ -16,4 +16,5 @@ python3 gen_ts_list_for_xunlei_download.py -project_path='save_path' -save_name=
 1、如果是简单的m3u8文件，可以使用
 ```	ffmpeg -i {m3u8_url} {video.mp4}```
 这样的命令直接下载，但是如果m3u8包括的ts文件较多，网络不太稳定的时候不推荐这样下载，因为中断后需要重新下载
+
 2、ts_key_path一般是下载的ts文件需要解密时才会用到的
