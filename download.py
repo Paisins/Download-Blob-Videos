@@ -100,9 +100,6 @@ def main(args):
 
 
 if __name__ == '__main__':
-    """
-    python3 gen_ts_list_for_xunlei_download.py -save_name='' -url='' -project_path=''
-    """
     parser = argparse.ArgumentParser()
     parser.add_argument('-save_name', help='保存视频名称', type=str, required=True)
     parser.add_argument('-url', help='m3u8文件的url', type=str, required=True)
