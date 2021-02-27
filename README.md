@@ -19,4 +19,4 @@ python3 main_download.py -project_path='save_path' -save_name='video_name' -url=
 
 2、ts_key_path一般是下载的ts文件需要解密时才会用到的
 
-3、如果在使用开发者时网页提示```Paused in debugger```，选中开发者工具中的```Deactivate Breakpoints```，然后刷新页面即可。
+3、如果在使用开发者工具时网页提示```Paused in debugger```，选中开发者工具中的```Deactivate Breakpoints```，然后刷新页面即可。
