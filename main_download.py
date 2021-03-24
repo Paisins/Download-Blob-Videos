@@ -41,7 +41,7 @@ def get_video(project_path, save_name, ts_url_pre):
     if 'URI="' in line:
         key_ts_name = line.split('"')[1]
         
-        download_file(os.paht.join(ts_url_pre, key_ts_name), os.path.join(project_path, 'ts_list_files', 'key_ts_name'))
+        download_file(os.path.join(ts_url_pre, key_ts_name), os.path.join(project_path, 'ts_list_files', key_ts_name))
         ts_local_file.write(line.replace('URI="', f'URI={project_path}/ts_key_files/'))
     else:
         ts_local_file.write(line)
