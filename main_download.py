@@ -10,39 +10,49 @@ def download_file(url, save_name):
         f.write(response.text)
 
 def gen_download_list(ts_list_path, save_name, m3u8_url):
-    download_file(m3u8_url, os.path.join(ts_list_path, f'{save_name}.m3u8'))
+    m3u8_file = os.path.join(ts_list_path, f'{save_name}.m3u8')
+    download_file(m3u8_url, m3u8_file)
     ts_url_pre = '/'.join(m3u8_url.split('?')[0].split('/')[:-1])
 
     ts_list = list()
     save_file = open(os.path.join(ts_list_path, f'{save_name}_download.txt'), 'w')
-    for line in open(os.path.join(ts_list_path, f'{save_name}.m3u8'), 'r'):
+    for line in open(m3u8_file, 'r'):
         if line.startswith('#'):
             continue
+        if line.startswith('http'):
+            save_file.write(line)
+            ts_list.append(line.rstrip())
+        else:
+            save_file.write(f'{ts_url_pre}/{line}')
+            ts_list.append(f'{ts_url_pre}/{line.rstrip()}')
+        # 这里拼接ts的情况较多，如果报错需要检查
         # save_file.write(f'{ts_url_pre}/{os.path.basename(line)}')
-        save_file.write(f'{ts_url_pre}/{line}')
         # ts_list.append(f'{ts_url_pre}/{os.path.basename(line)}'.rstrip())
-        ts_list.append(f'{ts_url_pre}/{line.rstrip()}')
+        
     save_file.close()
     return ts_list
 
 
-def get_video(project_path, save_name, ts_url_pre):
-    ts_local_name = os.path.join(project_path, 'ts_list_files', f'{save_name}_local.txt')
+def get_video(ts_list_path, ts_video_path, ts_key_path, videos_path, save_name, ts_url_pre):
+    ts_local_name = os.path.join(ts_list_path, f'{save_name}_local.txt')
     ts_local_file = open(ts_local_name, 'w')
-    ts_file = open(os.path.join(project_path, 'ts_list_files', f'{save_name}.m3u8'), 'r')
-
-    save_path = os.path.join(project_path, 'ts_video_tmp')
-
-    for i in range(4):
-        ts_local_file.write(ts_file.readline())
+    ts_file = open(os.path.join(ts_list_path, f'{save_name}.m3u8'), 'r')
+    
+    while True:
+        line = ts_file.readline()
+        if line.rstrip():
+            if not line.startswith('#EXTINF') and not line.startswith('URI="'):
+                ts_local_file.write(line)
+            else:
+                break
     
     # 解密文件
     line = ts_file.readline()
     if 'URI="' in line:
         key_ts_name = line.split('"')[1]
         
-        download_file(os.path.join(ts_url_pre, key_ts_name), os.path.join(project_path, 'ts_list_files', key_ts_name))
-        ts_local_file.write(line.replace('URI="', f'URI={project_path}/ts_key_files/'))
+        download_file(os.path.join(ts_url_pre, key_ts_name), os.path.join(ts_key_path, key_ts_name))
+        ts_local_file.write(line.replace('URI="', f'URI={ts_key_path}'))
     else:
         ts_local_file.write(line)
 
@@ -52,11 +62,11 @@ def get_video(project_path, save_name, ts_url_pre):
         if not line.rstrip().endswith('ts'):
             ts_local_file.write(line)
         else:
-            ts_local_file.write(os.path.join(save_path, save_name, os.path.basename(line.rstrip())) + '\n')
+            ts_local_file.write(os.path.join(ts_video_path, os.path.basename(line.rstrip())) + '\n')
             # break
     ts_local_file.close()
 
-    save_path = os.path.join(project_path, 'videos', f'{save_name}.mp4')
+    save_path = os.path.join(videos_path, f'{save_name}.mp4')
     cmd = 'ffmpeg -i {} -c copy {} -loglevel quiet'.format(ts_local_name, save_path)
 
     print(cmd)
@@ -80,13 +90,11 @@ def main(args):
     os.makedirs(ts_key_path, exist_ok=True)
     os.makedirs(videos_path, exist_ok=True)
 
-    ts_list_path = os.path.join(project_path, 'ts_list_files')
     ts_list = gen_download_list(ts_list_path, save_name, m3u8_url)
     total_download_count = len(ts_list)
     already_download_count = len(os.listdir(ts_video_path))
     need_download_count = total_download_count - already_download_count
     print('共{}个ts需要下载, 已下载{}个，还需要下载{}个'.format(total_download_count, already_download_count, need_download_count))
-
 
     coroutine_download(ts_list, ts_video_path, max_workers)
 
@@ -100,7 +108,7 @@ def main(args):
 
     print('开始合并...')
     ts_url_pre = '/'.join(m3u8_url.split('/')[:-1])
-    save_path = get_video(project_path, save_name, ts_url_pre)
+    save_path = get_video(ts_list_path, ts_video_path, ts_key_path, videos_path, save_name, ts_url_pre)
     print(f'合并成功! 保存为{save_path}')
 
 
