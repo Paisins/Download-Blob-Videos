@@ -69,7 +69,7 @@ class BlobDownloader:
                     if 'URI="' in line:
                         key_ts_name = line.split('"')[1]
                         ts_url = f'{self.url_prefix}/{key_ts_name}'
-                        local_m3u8_lines.append(line.replace('URI="', f'URI={self.basic_path}'))
+                        local_m3u8_lines.append(line.replace('URI="', f'URI={self.tmp_path}'))
                     else:
                         ts_url = None
                         local_m3u8_lines.append(line)
@@ -111,7 +111,7 @@ class BlobDownloader:
         save_path = os.path.join(self.video_path, self.save_name)
         logging.info('ffmpeg is merging...')
 
-        cmd = 'ffmpeg -i "{}" -c copy "{}" -loglevel quiet -y'.format(local_m3u8_file, save_path)
+        cmd = 'ffmpeg -allowed_extensions ALL -i "{}" -c copy "{}" -loglevel quiet -y'.format(local_m3u8_file, save_path)
         os.system(cmd)
         # i tried ffmpeg-python, but really don't know to make it work. it's too slow
         # ffmpeg.input(local_m3u8_file).concat().output(save_path).global_args('-report').run(overwrite_output=True)  # quiet=True
