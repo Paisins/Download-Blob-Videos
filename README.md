@@ -23,7 +23,7 @@ SaveVideoName = "video_name.mp4"
 Secondly, run this
 
 ```shell
-python3 blob_downloader.py
+python3 run.py
 ```
 
 This project is far away from perfect, even a little change of website could crash all downloading tasks. For now, it is only used to help myself download some videos.
