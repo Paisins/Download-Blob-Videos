@@ -59,7 +59,7 @@ class Downloader:
             async with self.sem:
                 async with session.get(url, **RequestConfig) as response:
                     if response.status != 200:
-                        logger.ERROR(f"status_code: {response.status}")
+                        logger.error(f"status_code: {response.status}")
                         await asyncio.sleep(0.5)
                         return False, None
                     # not perfect yet
