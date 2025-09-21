@@ -1,8 +1,8 @@
 from typing import Optional
 
+from rich.table import Column
+from rich.text import Text
 from rich.progress import (
-    Column,
-    Text,
     Task,
     BarColumn,
     Progress,
