@@ -74,6 +74,9 @@ class BlobDownloader:
                 logger.error(f"Invalid item format: {item}")
                 continue
 
+            if not save_name.endswith(".mp4"):
+                save_name = f"{save_name}.mp4"
+
             try:
                 result = self._download_single(url, save_name)
                 results.append(result)
@@ -108,9 +111,11 @@ class BlobDownloader:
         local_m3u8_file, tasks = self.parse_m3u8_file(m3u8_file)
         self.async_load_media(tasks)
         video_path = self.merge_media(local_m3u8_file)
-        if os.path.exists(video_path) and self.clean_tmp:
+        if self.clean_tmp and os.path.exists(video_path):
             logger.info(f"clean up tmp_path: {self.tmp_path}")
             shutil.rmtree(self.tmp_path)
+        elif not os.path.exists(video_path):
+            raise Exception("merge media failed")
         return video_path
 
     def load_m3u8_file(self) -> str:
