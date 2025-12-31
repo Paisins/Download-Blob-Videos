@@ -100,9 +100,12 @@ class BlobDownloader:
         # Set up instance variables for this download
         self.blob_url = blob_url.strip()
         self.save_name = get_url_basename(self.blob_url) if not save_name else save_name
-        self.save_path = self.base_save_path
+        self.save_path = os.path.join(self.base_save_path, self.save_name)
         self.tmp_path = os.path.join(self.base_tmp_path, self.save_name)
         self.url_prefix = get_url_prefix(self.blob_url)
+
+        if os.path.exists(self.save_path):
+            return self.save_path
 
         # Create tmp directory for this specific download
         os.makedirs(self.tmp_path, exist_ok=True)
@@ -188,7 +191,6 @@ class BlobDownloader:
         Args:
             local_m3u8_file (str): Path to local m3u8 file with local media paths
         """
-        save_path = os.path.join(self.save_path, self.save_name)
         logger.info("ffmpeg is merging...")
         cmd = """
         ffmpeg \
@@ -201,11 +203,11 @@ class BlobDownloader:
         -loglevel quiet \
         -y
         """.format(
-            local_m3u8_file, save_path
+            local_m3u8_file, self.save_path
         )
         os.system(cmd)
-        logger.info(f"finished download blob video! {save_path}")
-        return save_path
+        logger.info(f"finished download blob video! {self.save_path}")
+        return self.save_path
 
     def parse_meta_data(self, line: str) -> Tuple[str, str]:
         """Parse metadata line to extract key URL and modified line
@@ -217,19 +219,23 @@ class BlobDownloader:
             Tuple[str, str]: Key URL and modified line
         """
         search_res = re.search(r'URI="(.+?)"', line)
-        if search_res:
-            key_ts = search_res.group(1)
-            if "/" not in key_ts:
-                key_ts_path, key_ts_name = None, key_ts
-            else:
-                key_ts_path, key_ts_name = key_ts.rsplit("/", 1)
-            if key_ts_path and key_ts_path not in self.url_prefix:
+        if not search_res:
+            return "", line
+        key_ts = search_res.group(1)
+        if "/" not in key_ts:
+            key_ts_path, key_ts_name = None, key_ts
+            key_url = f"{self.url_prefix}/{key_ts_name}"
+        else:
+            # todo can't cover all cases
+            key_ts_path, key_ts_name = key_ts.rsplit("/", 1)
+            if key_ts_path not in self.url_prefix:
                 key_url = f"{self.url_prefix}/{key_ts}"
             else:
-                key_url = f"{self.url_prefix}/{key_ts_name}"
-            key_line = line.replace(key_ts, f"{self.tmp_path}/{key_ts_name}")
-            return key_url, key_line
-        return "", line
+                part_prefix = self.url_prefix.split(key_ts_path)[0]
+                key_url = f"{part_prefix}/{key_ts}"
+        clean_key_ts_name = key_ts_name.split("?")[0]
+        key_line = line.replace(key_ts, f"{self.tmp_path}/{clean_key_ts_name}")
+        return key_url, key_line
 
     def parse_media_segment(self, line: str) -> Tuple[str, str]:
         """Parse media segment line to extract media URL and modified line
